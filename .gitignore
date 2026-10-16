@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.npm-cache/
+.browsers/
+.runtime/
+font-cache/
+scratch/
+test-results/
+playwright-report/
+artifacts/
+*.tsbuildinfo
+*.log
+.dev-server.log
+.env*
+
+# Temporary test and verification scripts
+test_*.cjs
+test_*.js
+test_*.mjs
+verify_*.cjs
+verify_*.png
