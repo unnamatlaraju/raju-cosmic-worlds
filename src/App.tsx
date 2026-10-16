@@ -47,10 +47,23 @@ export function App() {
   const arrivalHeading = useRef<HTMLHeadingElement>(null)
   const exploreButton = useRef<HTMLButtonElement>(null)
   const plumeRef = useRef<SVGSVGElement>(null)
-  const gearRef = useRef<SVGGElement>(null)
-  const retroRef = useRef<SVGGElement>(null)
+  const gearRef = useRef<SVGSVGElement>(null)
+  const retroRef = useRef<SVGSVGElement>(null)
   const entryVeilRef = useRef<HTMLDivElement>(null)
-  const endpointsRef = useRef({ p1x: 240, p1y: -220, p2x: 420, p2y: 120 })
+  const shockwaveRef = useRef<HTMLDivElement>(null)
+  const slipstreamRef = useRef<HTMLDivElement>(null)
+  const endpointsRef = useRef({
+    p1x: 240,
+    p1y: -220,
+    p2x: 420,
+    p2y: 120,
+    r0x: 780,
+    r0y: 220,
+    r1x: 560,
+    r1y: -260,
+    r2x: 220,
+    r2y: -280,
+  })
   const interaction = useRef<SceneInteraction>({ highlighted: false, blocked: false })
   const previousPhase = useRef(phase)
   const travelling = phase === 'departing' || phase === 'returning'
@@ -176,11 +189,31 @@ export function App() {
       const padY = height * (composition.portrait ? 0.78 : 0.68)
       const apexX = startX + (padX - startX) * 0.54
       const apexY = height * (composition.portrait ? 0.16 : 0.18)
+      // On Vidyu World, Pad 01 is located on the lower-right planetary limb:
+      const returnLaunchX = width * (composition.portrait ? 0.72 : 0.76)
+      const returnLaunchY = height * (composition.portrait ? 0.74 : 0.74)
+      const r0x = returnLaunchX - startX
+      const r0y = returnLaunchY - startY
+
+      // Control Point 1: Steep Atmospheric Ascent Vector (punches upward and outward toward space)
+      const r1x = r0x - 220
+      const r1y = r0y - 480
+
+      // Control Point 2: Deep-space Trans-orbital Cruise Apex in the high starry cosmos
+      const r2x = r0x * 0.28
+      const r2y = -startY * 0.52 - 60
+
       endpointsRef.current = {
         p1x: apexX - startX,
         p1y: apexY - startY,
         p2x: padX - startX,
         p2y: padY - startY,
+        r0x,
+        r0y,
+        r1x,
+        r1y,
+        r2x,
+        r2y,
       }
     }
     measureEndpoints()
@@ -250,7 +283,7 @@ export function App() {
       const raw = frame.current.raw
 
       // ─────────────────────────────────────────────────────────────
-      // FORWARD RETURN FLIGHT: Emerges from Vidyu Planet & Docks at Gateway
+      // CINEMATIC LEVEL RETURN FLIGHT: Planetary Liftoff to Gateway Dock
       // ─────────────────────────────────────────────────────────────
       if (phase === 'returning') {
         if (exteriorHidden || button.style.visibility === 'hidden') {
@@ -259,106 +292,131 @@ export function App() {
           exteriorHidden = false
         }
 
-        // Return trajectory from Vidyu planet (p2x, p2y) to Gateway starting dock (0, 0)
-        const { p1x, p1y, p2x, p2y } = endpointsRef.current
-        const apexX = p1x * 0.82
-        const apexY = p1y - 35
+        const shockwave = shockwaveRef.current
+        const slipstream = slipstreamRef.current
+        const { r0x, r0y, r1x, r1y, r2x, r2y } = endpointsRef.current
 
-        // Smooth flight curve: planetary escape acceleration, deep-space cruise, orbital docking deceleration
+        // Hollywood cinematic trajectory curve parameter u:
+        // Slow powerful liftoff acceleration out of gravity, steady hypersonic deep-space glide, soft docking deceleration
         const u = raw * raw * (3 - 2 * raw)
         const inv = 1 - u
+        const inv2 = inv * inv
+        const inv3 = inv2 * inv
+        const u2 = u * u
 
-        // Quadratic Bezier from (p2x, p2y) at u = 0, to (0, 0) at u = 1
-        const curX = inv * inv * p2x + 2 * inv * u * apexX
-        const curY = inv * inv * p2y + 2 * inv * u * apexY
+        // Exact Cubic Bezier trajectory from surface Pad 01 to Gateway dock (0, 0)
+        const curX = inv3 * r0x + 3 * inv2 * u * r1x + 3 * inv * u2 * r2x
+        const curY = inv3 * r0y + 3 * inv2 * u * r1y + 3 * inv * u2 * r2y
 
-        // Ahead tangent vector to track forward velocity
-        const nextU = Math.min(1, u + 0.02)
-        const nextInv = 1 - nextU
-        const nextX = nextInv * nextInv * p2x + 2 * nextInv * nextU * apexX
-        const nextY = nextInv * nextInv * p2y + 2 * nextInv * nextU * apexY
+        // Exact analytic derivative B'(u) along flight vector
+        const term1 = 3 * inv2
+        const term2 = 6 * inv * u
+        const term3 = 3 * u2
+        const dx = term1 * (r1x - r0x) + term2 * (r2x - r1x) + term3 * (-r2x)
+        const dy = term1 * (r1y - r0y) + term2 * (r2y - r1y) + term3 * (-r2y)
 
-        const dx = nextX - curX
-        const dy = nextY - curY
+        // Physical flight pitch: pointing along the flight vector toward the left
+        const rawPitch = Math.atan2(dy, Math.max(1, -dx)) * (180 / Math.PI)
 
-        // Flight pitch: Facing forward along flight vector (pointing left toward dock),
-        // pitch along the trajectory vector is atan2(dy, -dx)
-        const flightPitch = Math.atan2(dy, Math.max(1, -dx)) * (180 / Math.PI)
+        // Dynamic scale in true perspective: emerges nestled on distant planetary surface (0.15) and expands to full dock (1.0)
+        const scale = 0.15 + 0.85 * Math.pow(u, 0.76)
 
-        // Perspective scale: starts small emerging from the distant planet (0.32) and expands to full scale (1.0) at dock
-        const scale = 0.32 + 0.68 * u
-
-        // Docking alignment turn (raw = 0.70 .. 0.94):
-        // Turns from deep-space flight facing left (rotateY: 180deg) back to parked dock orientation (rotateY: 0deg)
-        const dockPhase = Math.max(0, Math.min(1, (raw - 0.70) / 0.24))
+        // Docking alignment turn (raw = 0.72 .. 0.94):
+        // Turns from deep-space flight facing left (rotateY: 180deg) to dock-facing orientation (rotateY: 0deg)
+        const dockPhase = Math.max(0, Math.min(1, (raw - 0.72) / 0.22))
         const dockEase = dockPhase * dockPhase * (3 - 2 * dockPhase)
 
         const yaw = 180 * (1 - dockEase)
-        const bankRoll = Math.sin(dockEase * Math.PI) * 16
-        const pitch = flightPitch * (1 - dockEase)
+        const bankRoll = Math.sin(u * Math.PI) * (1 - dockEase) * 18
+        const dockBank = Math.sin(dockEase * Math.PI) * 14
+        const pitch = rawPitch * (1 - dockEase)
 
-        // Landing gear deployment (raw = 0.78 .. 0.92)
-        const gearDeploy = Math.max(0, Math.min(1, (raw - 0.78) / 0.14))
+        // Landing gear deployment (raw = 0.76 .. 0.90)
+        const gearDeploy = Math.max(0, Math.min(1, (raw - 0.76) / 0.14))
+        const gearEase = gearDeploy * gearDeploy * (3 - 2 * gearDeploy)
 
-        // Hydraulic suspension touchdown compression & rebound on dock contact (raw = 0.90 .. 1.0)
-        const touchdownT = Math.max(0, Math.min(1, (raw - 0.90) / 0.10))
-        const settleY = Math.sin(touchdownT * Math.PI * 1.35) * Math.exp(-touchdownT * 2.8) * 4.8
+        // Hydraulic suspension touchdown compression & rebound on dock contact (raw = 0.91 .. 1.0)
+        const touchdownT = Math.max(0, Math.min(1, (raw - 0.91) / 0.09))
+        const settleY = Math.sin(touchdownT * Math.PI * 1.35) * Math.exp(-touchdownT * 2.8) * 5.2
 
-        // Atmospheric and engine rumble during cruise
-        const rumbleAmp = Math.sin(raw * Math.PI) * (1 - dockEase) * 0.7
-        const rumbleX = Math.cos(now * 0.15) * rumbleAmp * 0.5
-        const rumbleY = Math.sin(now * 0.19) * rumbleAmp
+        // Deep-space cosmic rumble vibration
+        const rumbleAmp = Math.sin(raw * Math.PI) * (1 - dockEase) * 0.75
+        const rumbleX = Math.cos(now * 0.18) * rumbleAmp * 0.6
+        const rumbleY = Math.sin(now * 0.22) * rumbleAmp
 
-        button.style.transform = `perspective(900px) translate3d(${(curX + rumbleX).toFixed(1)}px, ${(curY + rumbleY + settleY).toFixed(1)}px, 0) rotate(${pitch.toFixed(2)}deg) rotateY(${yaw.toFixed(2)}deg) rotateX(${bankRoll.toFixed(2)}deg) scale(${scale.toFixed(3)})`
+        button.style.transform = `perspective(1000px) translate3d(${(curX + rumbleX).toFixed(1)}px, ${(curY + rumbleY + settleY).toFixed(1)}px, 0) rotate(${pitch.toFixed(2)}deg) rotateY(${yaw.toFixed(2)}deg) rotateX(${(bankRoll + dockBank).toFixed(2)}deg) scale(${scale.toFixed(3)})`
         button.style.opacity = '1'
 
-        // Main rocket engine plume:
-        // Burns during planet ascent and deep-space transit (raw = 0.0 .. 0.68),
-        // cuts off during docking alignment
+        // 1. Supersonic Plume: High-energy afterburner burn during liftoff and deep-space transit
         if (plume) {
-          const plumeActive = raw < 0.68
-          if (plumeActive) {
-            const plumePower = raw < 0.18
-              ? 0.5 + 0.5 * (raw / 0.18)
-              : Math.max(0, (1 - (raw - 0.45) / 0.23))
-            const pulse = 0.92 + Math.sin(now * 0.1) * 0.08
-            const ep = plumePower * pulse
+          if (raw < 0.70) {
+            const mainThrust = raw < 0.22
+              ? 0.7 + 0.75 * Math.sin((raw / 0.22) * (Math.PI * 0.5))
+              : raw < 0.52
+                ? 1.3 + Math.sin(now * 0.12) * 0.15
+                : Math.max(0, (1 - (raw - 0.52) / 0.18) * 1.3)
+            const pulse = 0.94 + Math.sin(now * 0.14) * 0.06
+            const ep = mainThrust * pulse
             plume.style.opacity = ep > 0.02 ? '1' : '0'
-            plume.style.transform = `scale3d(${ep.toFixed(3)}, ${(0.78 + ep * 0.22).toFixed(3)}, 1)`
+            plume.style.transform = `scale3d(${ep.toFixed(3)}, ${(0.75 + ep * 0.25).toFixed(3)}, 1)`
           } else {
             plume.style.opacity = '0'
           }
         }
 
-        // Retro-thrusters: flare during docking approach (raw = 0.68 .. 0.94)
+        // 2. Forward Retro-Thruster Jets: Counter-thrust braking burn during docking approach (raw = 0.70 .. 0.93)
         if (retro) {
-          const retroActive = raw >= 0.68 && raw <= 0.94
-          if (retroActive) {
-            const retroPower = Math.sin(((raw - 0.68) / 0.26) * Math.PI)
-            retro.style.opacity = `${(retroPower * 0.95).toFixed(3)}`
-            retro.style.transform = `scale3d(1, ${retroPower.toFixed(3)}, 1)`
+          if (raw >= 0.70 && raw <= 0.93) {
+            const retroPhase = Math.sin(((raw - 0.70) / 0.23) * Math.PI)
+            const retroJitter = 0.92 + Math.sin(now * 0.2) * 0.08
+            const epRetro = retroPhase * retroJitter
+            retro.style.opacity = `${(epRetro * 0.95).toFixed(3)}`
+            retro.style.transform = `scale3d(${epRetro.toFixed(3)}, ${(0.8 + epRetro * 0.2).toFixed(3)}, 1)`
           } else {
             retro.style.opacity = '0'
           }
         }
 
-        // Landing gear: extends and compresses on touchdown
+        // 3. Heavy-Duty Landing Gear: Extends from undercarriage and absorbs touchdown
         if (gear) {
-          gear.style.opacity = `${gearDeploy.toFixed(3)}`
-          gear.style.transform = `translate3d(0, ${((1 - gearDeploy) * -12 - settleY * 0.45).toFixed(1)}px, 0) scale3d(1, ${(0.2 + gearDeploy * 0.8 - settleY * 0.025).toFixed(3)}, 1)`
+          gear.style.opacity = `${gearEase.toFixed(3)}`
+          gear.style.transform = `translate3d(0, ${((1 - gearEase) * -18 - settleY * 0.5).toFixed(1)}px, 0) scale3d(1, ${(0.15 + gearEase * 0.85 - settleY * 0.03).toFixed(3)}, 1)`
         }
 
-        // Atmospheric cloud-break entry veil: flashes as ship leaves Vidyu atmosphere (raw = 0.04 .. 0.22)
-        const exitVeil = raw > 0.04 && raw < 0.22 ? Math.sin(((raw - 0.04) / 0.18) * Math.PI) : 0
+        // 4. Supersonic Atmospheric Breakout Shockwave Ring (raw = 0.04 .. 0.24)
+        if (shockwave) {
+          if (raw >= 0.04 && raw <= 0.24) {
+            const t_sw = (raw - 0.04) / 0.20
+            const swScale = 0.3 + 2.6 * t_sw
+            const swAlpha = Math.sin(t_sw * Math.PI) * 0.92
+            shockwave.style.opacity = `${swAlpha.toFixed(3)}`
+            shockwave.style.transform = `translate(-50%, -50%) scale(${swScale.toFixed(3)})`
+          } else {
+            shockwave.style.opacity = '0'
+          }
+        }
+
+        // 5. Cosmic Hypersonic Slipstream Warp Streaks (raw = 0.22 .. 0.70)
+        if (slipstream) {
+          if (raw >= 0.22 && raw <= 0.70) {
+            const t_ss = Math.sin(((raw - 0.22) / 0.48) * Math.PI)
+            slipstream.style.opacity = `${(t_ss * 0.85).toFixed(3)}`
+          } else {
+            slipstream.style.opacity = '0'
+          }
+        }
+
+        // 6. Atmospheric cloud-break entry veil: flashes as ship leaves Vidyu atmosphere (raw = 0.02 .. 0.20)
+        const breakoutGlow = raw > 0.02 && raw < 0.20 ? Math.sin(((raw - 0.02) / 0.18) * Math.PI) : 0
         if (entryVeil) {
-          if (exitVeil <= 0.002) {
+          if (breakoutGlow <= 0.002) {
             if (!veilHidden) {
               entryVeil.style.opacity = '0'
               veilHidden = true
             }
           } else {
             veilHidden = false
-            entryVeil.style.opacity = `${(exitVeil * 0.7).toFixed(3)}`
+            entryVeil.style.opacity = `${(breakoutGlow * 0.8).toFixed(3)}`
           }
         }
         return
@@ -572,40 +630,147 @@ export function App() {
               tabIndex={phase === 'gateway' ? 0 : -1}
               aria-label="Enter the spacecraft — Travel to Vidyu World"
             >
-              {/* Engine Rocket Plume anchored at rear engine nozzle (left edge) */}
-              <svg ref={plumeRef} className="ship-hero-plume" viewBox="0 0 160 80" fill="none" aria-hidden="true">
+              {/* Hollywood-Grade Supersonic Rocket Plume (320px) with 4 Mach Shock Diamonds */}
+              <svg ref={plumeRef} className="ship-hero-plume" viewBox="0 0 320 120" fill="none" aria-hidden="true">
                 <defs>
-                  <linearGradient id="hero-plume-core" x1="160" y1="40" x2="0" y2="40" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="15%" stopColor="#67e8f9" />
-                    <stop offset="40%" stopColor="#38bdf8" />
-                    <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
+                  <linearGradient id="hero-plume-glow-320" x1="320" y1="60" x2="0" y2="60" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+                    <stop offset="25%" stopColor="#818cf8" stopOpacity="0.8" />
+                    <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
+                    <stop offset="85%" stopColor="#ef4444" stopOpacity="0.35" />
                     <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
                   </linearGradient>
-                  <linearGradient id="hero-plume-glow" x1="160" y1="40" x2="0" y2="40" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
-                    <stop offset="25%" stopColor="#818cf8" stopOpacity="0.7" />
-                    <stop offset="55%" stopColor="#f97316" stopOpacity="0.5" />
+                  <linearGradient id="hero-plume-core-320" x1="320" y1="60" x2="30" y2="60" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="18%" stopColor="#67e8f9" />
+                    <stop offset="45%" stopColor="#38bdf8" />
+                    <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.9" />
                     <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
                   </linearGradient>
-                  <radialGradient id="hero-nozzle-glint" cx="155" cy="40" r="18" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="hero-plume-center-320" x1="320" y1="60" x2="80" y2="60" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+                    <stop offset="30%" stopColor="#e0f2fe" stopOpacity="0.95" />
+                    <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.75" />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+                  </linearGradient>
+                  <radialGradient id="hero-nozzle-glint-320" cx="316" cy="60" r="26" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="40%" stopColor="#67e8f9" stopOpacity="0.9" />
+                    <stop offset="35%" stopColor="#67e8f9" stopOpacity="0.95" />
+                    <stop offset="70%" stopColor="#0284c7" stopOpacity="0.5" />
                     <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
                   </radialGradient>
-                  <filter id="plume-blur" x="-20%" y="-20%" width="140%" height="140%">
+                  <filter id="plume-blur-320" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4.5" />
+                  </filter>
+                </defs>
+                {/* Volumetric outer blooming plasma */}
+                <ellipse cx="160" cy="60" rx="160" ry="42" fill="url(#hero-plume-glow-320)" filter="url(#plume-blur-320)" />
+                {/* Supersonic shock expansion cone */}
+                <path d="M320 38 C220 22 100 28 0 60 C100 92 220 98 320 82 Z" fill="url(#hero-plume-glow-320)" />
+                {/* Incandescent inner thrust column */}
+                <path d="M320 46 C230 40 130 46 25 60 C130 74 230 80 320 74 Z" fill="url(#hero-plume-core-320)" />
+                {/* Hyper-dense core stream */}
+                <path d="M320 52 C250 49 170 52 70 60 C170 68 250 71 320 68 Z" fill="url(#hero-plume-center-320)" />
+                {/* 4 Mach Shock Diamonds */}
+                <polygon points="262,60 274,53 286,60 274,67" fill="#ffffff" opacity="0.98" />
+                <polygon points="204,60 218,51 232,60 218,69" fill="#e0f2fe" opacity="0.92" />
+                <polygon points="146,60 162,50 178,60 162,70" fill="#bae6fd" opacity="0.85" />
+                <polygon points="86,60 104,49 122,60 104,71" fill="#7dd3fc" opacity="0.75" />
+                {/* Hot engine throat nozzle discharge */}
+                <ellipse cx="317" cy="60" rx="5" ry="18" fill="#ffffff" />
+                <ellipse cx="317" cy="60" rx="10" ry="24" fill="url(#hero-nozzle-glint-320)" />
+              </svg>
+
+              {/* Forward Retro-Braking Thruster Jets (Counter-thrust braking array) */}
+              <svg ref={retroRef} className="ship-hero-retro" viewBox="0 0 130 70" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="retro-core-grad" x1="0" y1="35" x2="130" y2="35" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="25%" stopColor="#67e8f9" />
+                    <stop offset="65%" stopColor="#38bdf8" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="retro-glow-grad" x1="0" y1="35" x2="130" y2="35" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.9" />
+                    <stop offset="40%" stopColor="#38bdf8" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+                  </linearGradient>
+                  <filter id="retro-blur" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="3" />
                   </filter>
                 </defs>
-                <ellipse cx="80" cy="40" rx="80" ry="28" fill="url(#hero-plume-glow)" filter="url(#plume-blur)" />
-                <path d="M160 28 C110 22 50 26 0 40 C50 54 110 58 160 52 Z" fill="url(#hero-plume-glow)" />
-                <path d="M160 33 C120 31 70 35 15 40 C70 45 120 49 160 47 Z" fill="url(#hero-plume-core)" />
-                <polygon points="140,40 148,36 156,40 148,44" fill="#ffffff" opacity="0.95" />
-                <polygon points="110,40 120,36 130,40 120,44" fill="#e0f2fe" opacity="0.85" />
-                <polygon points="80,40 92,37 104,40 92,43" fill="#bae6fd" opacity="0.75" />
-                <polygon points="50,40 62,38 74,40 62,42" fill="#7dd3fc" opacity="0.6" />
-                <ellipse cx="158" cy="40" rx="4" ry="12" fill="#ffffff" />
-                <ellipse cx="158" cy="40" rx="7" ry="16" fill="url(#hero-nozzle-glint)" />
+                {/* Upper angled RCS retro jet */}
+                <path d="M0 24 C35 18 80 8 125 0 C75 18 35 27 0 28 Z" fill="url(#retro-glow-grad)" filter="url(#retro-blur)" />
+                <path d="M0 25 C30 20 70 12 110 5 C65 19 30 26 0 27 Z" fill="url(#retro-core-grad)" />
+                {/* Lower angled RCS retro jet */}
+                <path d="M0 42 C35 43 75 52 125 70 C80 52 35 48 0 46 Z" fill="url(#retro-glow-grad)" filter="url(#retro-blur)" />
+                <path d="M0 43 C30 44 65 51 110 65 C70 51 30 47 0 45 Z" fill="url(#retro-core-grad)" />
+                {/* Center axial counter-thrust plume */}
+                <ellipse cx="45" cy="35" rx="45" ry="14" fill="url(#retro-glow-grad)" filter="url(#retro-blur)" />
+                <path d="M0 31 C40 28 80 32 120 35 C80 38 40 42 0 39 Z" fill="url(#retro-core-grad)" />
+                <ellipse cx="2" cy="35" rx="3" ry="8" fill="#ffffff" />
+              </svg>
+
+              {/* Atmospheric Supersonic Breakout Mach Shockwave Ring */}
+              <div ref={shockwaveRef} className="ship-hero-shockwave" aria-hidden="true" />
+
+              {/* Cosmic Hypersonic Slipstream Warp Streaks */}
+              <div ref={slipstreamRef} className="ship-hero-slipstream" aria-hidden="true">
+                <div className="slip-line s1" />
+                <div className="slip-line s2" />
+                <div className="slip-line s3" />
+                <div className="slip-line s4" />
+                <div className="slip-line s5" />
+                <div className="slip-line s6" />
+              </div>
+
+              {/* Heavy-Duty Aerospace Tricycle Hydraulic Landing Gear */}
+              <svg ref={gearRef} className="ship-hero-gear" viewBox="0 0 450 60" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="gear-strut-grad" x1="0" y1="0" x2="0" y2="60" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#94a3b8" />
+                    <stop offset="40%" stopColor="#475569" />
+                    <stop offset="100%" stopColor="#1e293b" />
+                  </linearGradient>
+                  <linearGradient id="gear-tire-grad" x1="0" y1="36" x2="0" y2="58" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#334155" />
+                    <stop offset="50%" stopColor="#0f172a" />
+                    <stop offset="100%" stopColor="#020617" />
+                  </linearGradient>
+                </defs>
+                {/* Nose Landing Gear (Forward / Left) */}
+                <g className="gear-assembly nose-gear">
+                  <rect x="138" y="2" width="6" height="34" rx="2" fill="url(#gear-strut-grad)" stroke="#64748b" strokeWidth="1" />
+                  <rect x="139.5" y="16" width="3" height="18" fill="#e2e8f0" />
+                  <polyline points="138,12 133,19 138,26" stroke="#94a3b8" strokeWidth="1.5" fill="none" />
+                  <rect x="127" y="36" width="10" height="20" rx="4" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <rect x="145" y="36" width="10" height="20" rx="4" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <circle cx="132" cy="46" r="3" fill="#94a3b8" />
+                  <circle cx="150" cy="46" r="3" fill="#94a3b8" />
+                  <circle cx="141" cy="34" r="1.5" fill="#38bdf8" />
+                </g>
+                {/* Main Port Gear (Aft / Center-Right) */}
+                <g className="gear-assembly main-port-gear">
+                  <rect x="308" y="0" width="8" height="36" rx="2" fill="url(#gear-strut-grad)" stroke="#64748b" strokeWidth="1" />
+                  <rect x="310" y="14" width="4" height="20" fill="#e2e8f0" />
+                  <polyline points="308,10 302,18 308,26" stroke="#94a3b8" strokeWidth="1.8" fill="none" />
+                  <rect x="296" y="36" width="12" height="22" rx="4.5" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <rect x="316" y="36" width="12" height="22" rx="4.5" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <circle cx="302" cy="47" r="3.5" fill="#94a3b8" />
+                  <circle cx="322" cy="47" r="3.5" fill="#94a3b8" />
+                  <circle cx="312" cy="34" r="1.5" fill="#38bdf8" />
+                </g>
+                {/* Main Starboard Gear (Aft / Far-Right) */}
+                <g className="gear-assembly main-starboard-gear">
+                  <rect x="348" y="0" width="8" height="36" rx="2" fill="url(#gear-strut-grad)" stroke="#64748b" strokeWidth="1" />
+                  <rect x="350" y="14" width="4" height="20" fill="#e2e8f0" />
+                  <polyline points="356,10 362,18 356,26" stroke="#94a3b8" strokeWidth="1.8" fill="none" />
+                  <rect x="336" y="36" width="12" height="22" rx="4.5" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <rect x="356" y="36" width="12" height="22" rx="4.5" fill="url(#gear-tire-grad)" stroke="#475569" strokeWidth="1" />
+                  <circle cx="342" cy="47" r="3.5" fill="#94a3b8" />
+                  <circle cx="362" cy="47" r="3.5" fill="#94a3b8" />
+                  <circle cx="352" cy="34" r="1.5" fill="#38bdf8" />
+                </g>
               </svg>
 
               {/* Photorealistic Spacecraft Vessel from reference media */}

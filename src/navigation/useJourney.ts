@@ -34,7 +34,7 @@ export function useJourney(reducedMotion: boolean) {
     current.raw = 0
     setPhase(nextPhase)
     const started = performance.now()
-    const duration = reduced.current ? 360 : destination === 'arrival' ? 6800 : 4200
+    const duration = reduced.current ? 360 : destination === 'arrival' ? 6800 : 4800
     const tick = (now: number) => {
       // Wall-clock timing also resolves a journey after a hidden tab resumes.
       const t = Math.min((now - started) / (reduced.current ? Math.min(duration, 360) : duration), 1)
