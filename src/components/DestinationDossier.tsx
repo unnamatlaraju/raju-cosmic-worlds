@@ -690,6 +690,18 @@ export function DestinationDossier({
                     <span>Web Audio API</span>
                     <span>Vite</span>
                   </div>
+                  <div className="proj-actions">
+                    <a
+                      className="proj-action-btn secondary"
+                      href="https://github.com/unnamatlaraju/raju-cosmic-worlds"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Icon name="github" />
+                      <span>View GitHub Repository</span>
+                      <Icon name="arrow" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
