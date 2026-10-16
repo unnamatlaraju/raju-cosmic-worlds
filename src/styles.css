@@ -727,6 +727,11 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 .ship-telemetry-pill:hover .ship-telemetry-text strong {
   color: #38bdf8;
 }
+.ship-telemetry-pill:active,
+.ship-button:active .ship-telemetry-pill {
+  transform: scale(0.97) translateY(0);
+  transition: transform 0.04s ease;
+}
 .telemetry-radar-dot {
   width: 7px;
   height: 7px;
@@ -963,6 +968,10 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   border-color: rgba(56, 189, 248, 0.6);
   transform: translateX(-3px);
   box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+.return-pad-btn:active:not(:disabled) {
+  transform: scale(0.96) translateX(-2px);
+  transition: transform 0.04s ease;
 }
 
 .canyon-telemetry-badge {
@@ -2078,8 +2087,8 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   padding: 0 32px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.22);
   font-size: 14px;
@@ -2113,7 +2122,8 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   transform: translateX(4px);
 }
 .explore-surface-btn:active {
-  transform: translateY(0);
+  transform: scale(0.97);
+  transition: transform 0.04s ease;
 }
 
 .cockpit-toggle-pill {
@@ -2799,12 +2809,12 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   margin-top: 12px;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.03) 38%,
-    rgba(10, 16, 32, 0.45) 100%
+    rgba(22, 28, 52, 0.72) 0%,
+    rgba(14, 18, 36, 0.65) 38%,
+    rgba(10, 14, 28, 0.78) 100%
   );
-  backdrop-filter: blur(32px) saturate(210%) contrast(106%);
-  -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(106%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 20px;
   padding: 12px 14px;
@@ -2880,25 +2890,28 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   border-radius: 14px;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.03) 45%,
-    rgba(14, 20, 38, 0.38) 100%
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.02) 45%,
+    rgba(14, 20, 38, 0.55) 100%
   );
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.22);
   text-align: left;
   cursor: pointer;
   overflow: hidden;
   pointer-events: auto;
+  contain: layout style;
   box-shadow:
     inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3),
     0 8px 24px -4px rgba(0, 0, 0, 0.45);
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.24s ease,
-              background 0.24s ease,
-              box-shadow 0.24s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              background 0.2s ease,
+              box-shadow 0.2s ease;
+}
+.travel-vector-card:active {
+  transform: scale(0.975);
+  transition: transform 0.04s ease;
 }
 
 /* Light flare reflection glide across glass on hover */
@@ -3729,6 +3742,10 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
 }
+.dossier-back-to-canyon-btn:active {
+  transform: scale(0.96);
+  transition: transform 0.04s ease;
+}
 .dossier-center-cluster {
   display: flex;
   align-items: center;
@@ -3836,6 +3853,15 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   background: #ffffff;
   color: #0b0f19;
   transform: scale(1.08);
+}
+.dossier-close-btn:active {
+  transform: scale(0.92);
+  transition: transform 0.04s ease;
+}
+.t-tab:active,
+.dossier-tab:active {
+  transform: scale(0.96);
+  transition: transform 0.04s ease;
 }
 
 /* ── Achievements Page Dedicated Ending / Say Bye Button ── */

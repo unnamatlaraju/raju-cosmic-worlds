@@ -84,10 +84,9 @@ export function FlightOverlay({
       let cockpitScale = 1
       if (!pinned) {
         if (phase === 'returning') {
-          const retIn = Math.max(0, Math.min(1, (raw - 0.12) / 0.18))
-          const retOut = Math.max(0, Math.min(1, (0.86 - raw) / 0.18))
-          cockpitAlpha = Math.min(retIn, retOut)
-          cockpitScale = 1 + (1 - cockpitAlpha) * 0.08
+          // Exterior cinematic view: the rocket emerges from Vidyu planet and flies forward into the dock
+          cockpitAlpha = 0
+          cockpitScale = 1
         } else {
           const enterT = Math.max(0, Math.min(1, (t - 0.12) / 0.14))
           const enterEase = enterT * enterT * (3 - 2 * enterT)

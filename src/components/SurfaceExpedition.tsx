@@ -48,6 +48,9 @@ export function SurfaceExpedition({
     locationRef.current = location
   }, [location])
 
+  const isContinuousRef = useRef(false)
+  const subscriptionRef = useRef<{ setContinuous: (c: boolean) => void } | null>(null)
+
   useEffect(() => {
     const onPointerMove = (e: PointerEvent) => {
       if (reducedMotion) return
@@ -55,11 +58,22 @@ export function SurfaceExpedition({
       const ny = (e.clientY / window.innerHeight) * 2 - 1
       pointer.current.targetX = Math.max(-1, Math.min(1, nx))
       pointer.current.targetY = Math.max(-1, Math.min(1, ny))
+
+      if (!isContinuousRef.current && subscriptionRef.current) {
+        subscriptionRef.current.setContinuous(true)
+        isContinuousRef.current = true
+      }
+      frameClock.invalidate()
     }
 
     const resetPointer = () => {
       pointer.current.targetX = 0
       pointer.current.targetY = 0
+      if (!isContinuousRef.current && subscriptionRef.current) {
+        subscriptionRef.current.setContinuous(true)
+        isContinuousRef.current = true
+      }
+      frameClock.invalidate()
     }
 
     window.addEventListener('pointermove', onPointerMove, { passive: true })
@@ -86,18 +100,19 @@ export function SurfaceExpedition({
     if (!container) return
 
     let wasVisible = false
-    let isContinuous = false
 
     const subscription = frameClock.subscribe((now) => {
       const raw = journey.current.raw
-      const t = phase === 'returning' ? 1 - raw : raw
-
-      // Reveal envelope: begins as spacecraft plunges below clouds (t = 0.68..0.96)
+      // Reveal envelope: begins as spacecraft plunges below clouds on departure (raw = 0.68..0.96)
+      // On return, liftoff takes the spacecraft out of the atmosphere (raw = 0.00..0.22)
       let alpha = 0
       if (arrived) {
         alpha = 1
-      } else if (phase === 'departing' || phase === 'returning') {
-        const blend = Math.max(0, Math.min(1, (t - 0.68) / 0.28))
+      } else if (phase === 'departing') {
+        const blend = Math.max(0, Math.min(1, (raw - 0.68) / 0.28))
+        alpha = blend * blend * (3 - 2 * blend)
+      } else if (phase === 'returning') {
+        const blend = Math.max(0, 1 - raw / 0.22)
         alpha = blend * blend * (3 - 2 * blend)
       }
 
@@ -107,9 +122,9 @@ export function SurfaceExpedition({
           container.style.visibility = 'hidden'
           wasVisible = false
         }
-        if (isContinuous) {
+        if (isContinuousRef.current) {
           subscription.setContinuous(false)
-          isContinuous = false
+          isContinuousRef.current = false
         }
         return
       }
@@ -119,17 +134,26 @@ export function SurfaceExpedition({
         wasVisible = true
       }
 
-      if (!reducedMotion && !isContinuous) {
-        subscription.setContinuous(true)
-        isContinuous = true
+      const p = pointer.current
+      const dx = p.targetX - p.x
+      const dy = p.targetY - p.y
+      const isMoving = Math.abs(dx) > 0.0005 || Math.abs(dy) > 0.0005
+
+      if (!reducedMotion && (phase === 'departing' || phase === 'returning' || isMoving)) {
+        if (!isContinuousRef.current) {
+          subscription.setContinuous(true)
+          isContinuousRef.current = true
+        }
+      } else if (arrived && !isMoving && isContinuousRef.current) {
+        subscription.setContinuous(false)
+        isContinuousRef.current = false
       }
 
       container.style.opacity = `${alpha.toFixed(3)}`
 
       // Smooth pointer lerp for realistic camera parallax
-      const p = pointer.current
-      p.x += (p.targetX - p.x) * 0.06
-      p.y += (p.targetY - p.y) * 0.06
+      p.x += dx * 0.08
+      p.y += dy * 0.08
 
       const px = reducedMotion ? 0 : p.x
       const py = reducedMotion ? 0 : p.y
@@ -179,7 +203,12 @@ export function SurfaceExpedition({
       }
     })
 
-    return () => subscription.dispose()
+    subscriptionRef.current = subscription
+
+    return () => {
+      subscriptionRef.current = null
+      subscription.dispose()
+    }
   }, [journey, phase, arrived, reducedMotion])
 
   const isCanyon = location === 'canyon'

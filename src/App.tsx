@@ -59,19 +59,6 @@ export function App() {
   const flyToCanyon = () => {
     if (transitState !== 'idle') return
 
-    // Prime/unlock Web Audio on this user click so the browser permits automatic playback when arriving in Ember Canyon
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-      if (AudioCtx) {
-        const primeCtx = new AudioCtx()
-        if (primeCtx.state === 'suspended') {
-          primeCtx.resume()
-        }
-      }
-    } catch {
-      // ignore
-    }
-
     setTransitState('flying-to-canyon')
     setSurfaceLocation('canyon')
     setTimeout(() => {
@@ -81,7 +68,9 @@ export function App() {
 
   const flyToPad = () => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+      queueMicrotask(() => {
+        try { window.speechSynthesis.cancel() } catch { /* ignore */ }
+      })
     }
     if (transitState !== 'idle') return
     setTransitState('flying-to-pad')
@@ -93,7 +82,9 @@ export function App() {
 
   const handleTravelDestination = (destination: DestinationSection) => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+      queueMicrotask(() => {
+        try { window.speechSynthesis.cancel() } catch { /* ignore */ }
+      })
     }
     if (destination === 'vidyu') {
       flyToPad()
@@ -257,7 +248,126 @@ export function App() {
 
     const subscription = frameClock.subscribe((now) => {
       const raw = frame.current.raw
-      const t = phase === 'departing' ? raw : 1 - raw
+
+      // ─────────────────────────────────────────────────────────────
+      // FORWARD RETURN FLIGHT: Emerges from Vidyu Planet & Docks at Gateway
+      // ─────────────────────────────────────────────────────────────
+      if (phase === 'returning') {
+        if (exteriorHidden || button.style.visibility === 'hidden') {
+          button.style.visibility = 'visible'
+          button.style.opacity = '1'
+          exteriorHidden = false
+        }
+
+        // Return trajectory from Vidyu planet (p2x, p2y) to Gateway starting dock (0, 0)
+        const { p1x, p1y, p2x, p2y } = endpointsRef.current
+        const apexX = p1x * 0.82
+        const apexY = p1y - 35
+
+        // Smooth flight curve: planetary escape acceleration, deep-space cruise, orbital docking deceleration
+        const u = raw * raw * (3 - 2 * raw)
+        const inv = 1 - u
+
+        // Quadratic Bezier from (p2x, p2y) at u = 0, to (0, 0) at u = 1
+        const curX = inv * inv * p2x + 2 * inv * u * apexX
+        const curY = inv * inv * p2y + 2 * inv * u * apexY
+
+        // Ahead tangent vector to track forward velocity
+        const nextU = Math.min(1, u + 0.02)
+        const nextInv = 1 - nextU
+        const nextX = nextInv * nextInv * p2x + 2 * nextInv * nextU * apexX
+        const nextY = nextInv * nextInv * p2y + 2 * nextInv * nextU * apexY
+
+        const dx = nextX - curX
+        const dy = nextY - curY
+
+        // Flight pitch: Facing forward along flight vector (pointing left toward dock),
+        // pitch along the trajectory vector is atan2(dy, -dx)
+        const flightPitch = Math.atan2(dy, Math.max(1, -dx)) * (180 / Math.PI)
+
+        // Perspective scale: starts small emerging from the distant planet (0.32) and expands to full scale (1.0) at dock
+        const scale = 0.32 + 0.68 * u
+
+        // Docking alignment turn (raw = 0.70 .. 0.94):
+        // Turns from deep-space flight facing left (rotateY: 180deg) back to parked dock orientation (rotateY: 0deg)
+        const dockPhase = Math.max(0, Math.min(1, (raw - 0.70) / 0.24))
+        const dockEase = dockPhase * dockPhase * (3 - 2 * dockPhase)
+
+        const yaw = 180 * (1 - dockEase)
+        const bankRoll = Math.sin(dockEase * Math.PI) * 16
+        const pitch = flightPitch * (1 - dockEase)
+
+        // Landing gear deployment (raw = 0.78 .. 0.92)
+        const gearDeploy = Math.max(0, Math.min(1, (raw - 0.78) / 0.14))
+
+        // Hydraulic suspension touchdown compression & rebound on dock contact (raw = 0.90 .. 1.0)
+        const touchdownT = Math.max(0, Math.min(1, (raw - 0.90) / 0.10))
+        const settleY = Math.sin(touchdownT * Math.PI * 1.35) * Math.exp(-touchdownT * 2.8) * 4.8
+
+        // Atmospheric and engine rumble during cruise
+        const rumbleAmp = Math.sin(raw * Math.PI) * (1 - dockEase) * 0.7
+        const rumbleX = Math.cos(now * 0.15) * rumbleAmp * 0.5
+        const rumbleY = Math.sin(now * 0.19) * rumbleAmp
+
+        button.style.transform = `perspective(900px) translate3d(${(curX + rumbleX).toFixed(1)}px, ${(curY + rumbleY + settleY).toFixed(1)}px, 0) rotate(${pitch.toFixed(2)}deg) rotateY(${yaw.toFixed(2)}deg) rotateX(${bankRoll.toFixed(2)}deg) scale(${scale.toFixed(3)})`
+        button.style.opacity = '1'
+
+        // Main rocket engine plume:
+        // Burns during planet ascent and deep-space transit (raw = 0.0 .. 0.68),
+        // cuts off during docking alignment
+        if (plume) {
+          const plumeActive = raw < 0.68
+          if (plumeActive) {
+            const plumePower = raw < 0.18
+              ? 0.5 + 0.5 * (raw / 0.18)
+              : Math.max(0, (1 - (raw - 0.45) / 0.23))
+            const pulse = 0.92 + Math.sin(now * 0.1) * 0.08
+            const ep = plumePower * pulse
+            plume.style.opacity = ep > 0.02 ? '1' : '0'
+            plume.style.transform = `scale3d(${ep.toFixed(3)}, ${(0.78 + ep * 0.22).toFixed(3)}, 1)`
+          } else {
+            plume.style.opacity = '0'
+          }
+        }
+
+        // Retro-thrusters: flare during docking approach (raw = 0.68 .. 0.94)
+        if (retro) {
+          const retroActive = raw >= 0.68 && raw <= 0.94
+          if (retroActive) {
+            const retroPower = Math.sin(((raw - 0.68) / 0.26) * Math.PI)
+            retro.style.opacity = `${(retroPower * 0.95).toFixed(3)}`
+            retro.style.transform = `scale3d(1, ${retroPower.toFixed(3)}, 1)`
+          } else {
+            retro.style.opacity = '0'
+          }
+        }
+
+        // Landing gear: extends and compresses on touchdown
+        if (gear) {
+          gear.style.opacity = `${gearDeploy.toFixed(3)}`
+          gear.style.transform = `translate3d(0, ${((1 - gearDeploy) * -12 - settleY * 0.45).toFixed(1)}px, 0) scale3d(1, ${(0.2 + gearDeploy * 0.8 - settleY * 0.025).toFixed(3)}, 1)`
+        }
+
+        // Atmospheric cloud-break entry veil: flashes as ship leaves Vidyu atmosphere (raw = 0.04 .. 0.22)
+        const exitVeil = raw > 0.04 && raw < 0.22 ? Math.sin(((raw - 0.04) / 0.18) * Math.PI) : 0
+        if (entryVeil) {
+          if (exitVeil <= 0.002) {
+            if (!veilHidden) {
+              entryVeil.style.opacity = '0'
+              veilHidden = true
+            }
+          } else {
+            veilHidden = false
+            entryVeil.style.opacity = `${(exitVeil * 0.7).toFixed(3)}`
+          }
+        }
+        return
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // DEPARTING FLIGHT: Launch from Gateway to Vidyu World
+      // ─────────────────────────────────────────────────────────────
+      const t = raw
 
       // The 2D hero button launches from the Gateway and smoothly transitions into Cockpit POV (t = 0.12..0.26).
       // Throughout the planetary atmosphere and on Pad 01, our 3D spacecraft is rendered in Three.js WebGL!

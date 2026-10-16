@@ -211,7 +211,9 @@ export function CosmicCompanion3D({
       audio.currentTime = 0
     }
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
+      queueMicrotask(() => {
+        try { window.speechSynthesis.cancel() } catch { /* ignore */ }
+      })
     }
     if (gainNodeRef.current && audioContextRef.current) {
       try {
@@ -423,7 +425,7 @@ export function CosmicCompanion3D({
       powerPreference: 'high-performance',
     })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.25
     renderer.shadowMap.enabled = false

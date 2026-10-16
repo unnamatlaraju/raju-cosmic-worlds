@@ -108,7 +108,7 @@ export function AstraSectionGuide3D({
       powerPreference: 'high-performance',
     })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.35
     container.appendChild(renderer.domElement)
@@ -138,12 +138,10 @@ export function AstraSectionGuide3D({
     scene.add(bounceLight)
 
     // 3. Materials
-    const matSilkChassis = new THREE.MeshPhysicalMaterial({
+    const matSilkChassis = new THREE.MeshStandardMaterial({
       color: 0xf4f6fa,
-      roughness: 0.20,
-      metalness: 0.10,
-      clearcoat: 0.85,
-      clearcoatRoughness: 0.15,
+      roughness: 0.18,
+      metalness: 0.12,
     })
 
     const matObsidianArmor = new THREE.MeshStandardMaterial({
