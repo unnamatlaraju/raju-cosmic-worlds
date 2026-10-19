@@ -187,7 +187,8 @@ export function DestinationDossier({
                 onClick={() => onSelectSection('skills')}
               >
                 <span>⚡</span>
-                <span>Skills & Stack</span>
+                <span className="tab-label-full">Skills & Stack</span>
+                <span className="tab-label-short">Skills</span>
               </button>
               <button
                 className={`dossier-tab t-tab ${activeSection === 'education' ? 'active' : ''}`}
@@ -205,7 +206,8 @@ export function DestinationDossier({
                 onClick={() => onSelectSection('achievements')}
               >
                 <span>🏆</span>
-                <span>Achievements</span>
+                <span className="tab-label-full">Achievements</span>
+                <span className="tab-label-short">Honors</span>
               </button>
             </nav>
           </div>
@@ -371,7 +373,8 @@ export function DestinationDossier({
                       aria-selected={vidyuContentPart === 1}
                     >
                       <span className="card-part-tag">PART 1</span>
-                      <span>Overview & Scale Metrics</span>
+                      <span className="part-label-full">Overview & Scale Metrics</span>
+                      <span className="part-label-short">Overview</span>
                     </button>
                     <button
                       className={`card-part-tab ${vidyuContentPart === 2 ? 'active' : ''}`}
@@ -381,7 +384,8 @@ export function DestinationDossier({
                       aria-selected={vidyuContentPart === 2}
                     >
                       <span className="card-part-tag">PART 2</span>
-                      <span>Architectural Pillars (6 Systems)</span>
+                      <span className="part-label-full">Architectural Pillars (6 Systems)</span>
+                      <span className="part-label-short">Architecture</span>
                     </button>
                   </div>
 
@@ -509,7 +513,8 @@ export function DestinationDossier({
                       aria-selected={spendlyContentPart === 1}
                     >
                       <span className="card-part-tag">PART 1</span>
-                      <span>Overview & Tech Stack</span>
+                      <span className="part-label-full">Overview & Tech Stack</span>
+                      <span className="part-label-short">Overview</span>
                     </button>
                     <button
                       className={`card-part-tab ${spendlyContentPart === 2 ? 'active' : ''}`}
@@ -519,7 +524,8 @@ export function DestinationDossier({
                       aria-selected={spendlyContentPart === 2}
                     >
                       <span className="card-part-tag">PART 2</span>
-                      <span>Engineering Highlights (4 Pillars)</span>
+                      <span className="part-label-full">Engineering Highlights (4 Pillars)</span>
+                      <span className="part-label-short">Architecture</span>
                     </button>
                   </div>
 

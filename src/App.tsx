@@ -120,8 +120,8 @@ export function App() {
   useEffect(() => {
     const checkHash = () => {
       const hash = window.location.hash.replace('#', '').toLowerCase()
-      if (['projects', 'education', 'vidyu', 'achievements'].includes(hash)) {
-        setActiveDossier(hash as DestinationSection)
+      if (['projects', 'skills', 'education', 'vidyu', 'achievements'].includes(hash)) {
+        setActiveDossier((hash === 'vidyu' ? 'projects' : hash) as DestinationSection)
       }
     }
     checkHash()
