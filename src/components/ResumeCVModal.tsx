@@ -91,7 +91,8 @@ export function ResumeCVModal({ open, onClose }: ResumeCVModalProps) {
                 title="Download official Resume PDF"
               >
                 <Icon name="download" />
-                <span>Download Resume</span>
+                <span className="dl-text-full">Download Resume</span>
+                <span className="dl-text-short">Resume</span>
               </a>
               <a
                 href="/raju-cv.pdf"
@@ -100,7 +101,8 @@ export function ResumeCVModal({ open, onClose }: ResumeCVModalProps) {
                 title="Download official CV PDF"
               >
                 <Icon name="download" />
-                <span>Download CV</span>
+                <span className="dl-text-full">Download CV</span>
+                <span className="dl-text-short">CV</span>
               </a>
             </div>
           </div>

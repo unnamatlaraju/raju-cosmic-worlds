@@ -541,6 +541,36 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 .wordmark > span:last-child { display: flex; flex-direction: column; gap: 4px; }
 .wordmark strong { font-size: 17px; font-weight: 600; letter-spacing: 3px; line-height: 1.1; }
 .wordmark > span > span { font-size: 8px; font-weight: 450; letter-spacing: 1.35px; color: var(--secondary); }
+
+/* Responsive short/full text helpers */
+.nav-btn-text-short,
+.dossier-back-text-short,
+.return-pad-text-short,
+.dl-text-short {
+  display: none;
+}
+.nav-btn-text-full,
+.dossier-back-text-full,
+.return-pad-text-full,
+.dl-text-full {
+  display: inline;
+}
+
+@media (max-width: 540px) {
+  .nav-btn-text-full,
+  .dossier-back-text-full,
+  .return-pad-text-full,
+  .dl-text-full {
+    display: none;
+  }
+  .nav-btn-text-short,
+  .dossier-back-text-short,
+  .return-pad-text-short,
+  .dl-text-short {
+    display: inline;
+  }
+}
+
 .site-header nav { display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .glass-nav-btn {
   display: inline-flex;
@@ -2737,18 +2767,76 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 
 /* Portrait tablets and phones share a vertical composition, with separate type scales. */
 @media (max-width: 679px), (max-width: 999px) and (max-aspect-ratio: 20/19) {
-  .cosmic-app { min-height: 620px; grid-template-rows: 76px 1fr 58px; --planet-x: 58%; --planet-y: 27.5%; --planet-size: min(41vw, 23svh); }
-  .main-content { align-items: flex-end; padding: 0 7% 27px; }
-  .hero-content, .arrival-content, .canyon-outpost-content { width: 100%; max-width: 580px; margin: 0 auto; }
-  .canyon-outpost-topbar { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
-  .canyon-telemetry-badge { font-size: 9.5px; }
+  .cosmic-app {
+    min-height: 100svh;
+    height: 100svh;
+    grid-template-rows: 72px 1fr 54px;
+    --planet-x: 58%;
+    --planet-y: 27.5%;
+    --planet-size: min(41vw, 23svh);
+  }
+  .main-content {
+    align-items: flex-end;
+    padding: 0 16px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hero-content, .arrival-content {
+    width: 100%;
+    max-width: 580px;
+    margin: 0 auto;
+  }
+  .canyon-outpost-content {
+    width: 100%;
+    max-width: 580px;
+    margin: 0 auto;
+    max-height: calc(100svh - 130px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 24px;
+  }
+  .canyon-outpost-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+  }
+  .return-pad-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 11px;
+    gap: 6px;
+  }
+  .canyon-telemetry-badge {
+    font-size: 8.5px;
+    letter-spacing: 1.2px;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 2px;
+  }
+  .canyon-topbar-actions {
+    gap: 6px;
+  }
+  .canyon-mute-pill,
+  .cockpit-toggle-pill {
+    padding: 5px 10px;
+    font-size: 10.5px;
+    gap: 5px;
+  }
   .hero-content h1 { font-size: clamp(29px, 5.7vw, 43px); letter-spacing: -.035em; margin: 18px 0; }
   .welcome-line > span { display: inline; font-size: 1em; letter-spacing: inherit; }
   .hero-content h1 em { font-size: 2.08em; margin-top: 0; line-height: 1.03; }
   .hero-description { font-size: 14px; max-width: 360px; line-height: 1.75; }
   .hero-actions { gap: 23px; margin-top: 22px; row-gap: 7px; }
-   .primary-button { font-size: 12px; min-height: 50px; }
-   .ship-button { width: min(100%, 390px); }
+  .primary-button { font-size: 12px; min-height: 50px; }
+  .ship-button { width: min(100%, 390px); }
   .text-button { font-size: 12px; }
   .hero-note { margin-top: 17px; font-size: 10px; max-width: none; }
   .destination-caption { top: calc(100% + 17px); }
@@ -2761,35 +2849,156 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
   .moon-ochre { left: 87%; top: 37.5%; width: 2.6svh; height: 2.6svh; }
   .arrival-content { width: 100%; max-width: 580px; }
   .expedition-deck-container { padding: 16px 18px 20px; max-height: 94vh; }
-  .cosmic-companion-3d-stage { height: 440px; }
-  .companion-canvas-mount { max-width: none; height: 100%; }
-  .companion-hologram-deck { top: 18%; transform: none; right: 4%; left: 4%; width: auto; }
+  
+  /* Canyon Outpost Companion Stage on Mobile */
+  .cosmic-companion-3d-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto !important;
+    min-height: 0;
+    width: 100%;
+    position: relative;
+    gap: 10px;
+  }
+  .companion-canvas-mount {
+    width: 100%;
+    max-width: 260px;
+    height: 180px !important;
+    flex-shrink: 0;
+    margin: 0 auto;
+    position: relative;
+  }
+  .companion-hologram-deck {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+  }
+  .deck-speech-bubble {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    pointer-events: auto;
+  }
   .deck-speech-bubble::before { display: none; }
+  .travel-destinations-deck {
+    width: 100%;
+    margin-top: 0;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+  .travel-buttons-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .travel-vector-card {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 14px;
+    width: 100%;
+  }
+  .travel-vector-card strong {
+    font-size: 13.5px;
+  }
+  .travel-vector-card p {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .t-travel-pill {
+    padding: 5px 12px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
   .deck-project-cards { grid-template-columns: 1fr; }
   .ember-guide-container { grid-template-columns: 160px 1fr; padding: 14px 16px; gap: 14px; }
   .ember-portrait-card { width: 150px; }
   .arrival-heading .world-line { font-size: clamp(38px, 6.8vw, 54px); }
   .arrival-heading .ideas-serif { font-size: clamp(46px, 8vw, 68px); }
   .arrival-description { font-size: 14px; max-width: 380px; }
+  
+  /* Cockpit POV on Mobile */
   .cockpit-overhead-panel, .cockpit-center-reticle { display: none; }
   .cockpit-glare-mcp { width: 92vw; bottom: 23.5%; grid-template-columns: 1fr; gap: 6px; padding: 5px 10px; }
   .cockpit-glare-mcp > .mcp-annunciator-bank:last-child { display: none; }
-  .cockpit-windshield-hud { top: 7%; left: 6%; right: 6%; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .hud-center-compass { grid-column: 1 / -1; order: -1; margin-bottom: 4px; }
-  .hud-brand-row { font-size: 10px; letter-spacing: 1.5px; margin-bottom: 6px; }
-  .hud-destination-box, .hud-right-telemetry { padding: 8px 10px; max-width: none; }
-  .cockpit-dashboard { left: 4%; right: 4%; bottom: 2%; height: 21%; min-height: 125px; grid-template-columns: 1.2fr 1.1fr .75fr; gap: 8px; }
-  .mfd-unit-right-center { display: none; }
-  .mfd-unit-left, .mfd-unit-right { transform: none; }
+  .cockpit-windshield-hud {
+    top: max(44px, env(safe-area-inset-top));
+    left: 10px;
+    right: 10px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hud-center-compass { margin-bottom: 2px; }
+  .hud-brand-row { font-size: 9px; letter-spacing: 1.2px; margin-bottom: 4px; }
+  .hud-destination-box, .hud-right-telemetry { padding: 6px 10px; max-width: none; }
+  .hud-stat-cell strong { font-size: 12px; }
+  .hud-stat-cell span { font-size: 8px; }
+  .cockpit-dashboard {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    grid-template-columns: 1fr;
+  }
+  .mfd-unit-left,
+  .mfd-unit-right,
+  .mfd-unit-right-center {
+    display: none !important;
+  }
+  .mfd-unit-center {
+    width: 100%;
+    max-width: 360px;
+    min-width: 0;
+    transform: none;
+  }
+  .flight-skip-button {
+    top: max(14px, env(safe-area-inset-top));
+    right: 12px;
+    padding: 6px 14px;
+    font-size: 11px;
+  }
 }
 
 @media (max-width: 600px) {
-  .site-header { padding: 0 6%; }
-  .wordmark { gap: 9px; }
-  .brand-symbol, .brand-symbol .icon { width: 29px; height: 29px; }
-  .wordmark strong { font-size: 15px; letter-spacing: 2.4px; }
-  .wordmark > span > span { font-size: 7px; letter-spacing: 1px; }
-  .site-header nav { gap: 15px; font-size: 11px; }
+  .site-header {
+    padding: 0 14px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    gap: 8px;
+  }
+  .site-header-left {
+    gap: 8px;
+  }
+  .round-glass-back-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+  .wordmark { gap: 8px; }
+  .brand-symbol, .brand-symbol .icon { width: 28px; height: 28px; }
+  .wordmark strong { font-size: 14px; letter-spacing: 1.8px; }
+  .wordmark > span > span { font-size: 7px; letter-spacing: 0.8px; }
+  .site-header nav { gap: 6px; font-size: 11px; }
+  .glass-nav-btn {
+    min-height: 34px;
+    padding: 0 11px;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .glass-nav-btn .icon {
+    width: 13px;
+    height: 13px;
+  }
   .worlds-link { width: 44px; justify-content: center; }
   .worlds-link > span { display: none; }
   .hero-content h1 { font-size: clamp(27px, 7.5vw, 35px); }
@@ -3779,16 +3988,234 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 }
 
 @media (max-width: 780px) {
+  .dossier-container {
+    margin: 8px auto 36px;
+    padding: 0 10px;
+  }
+  .dossier-topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "back close"
+      "tabs tabs";
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+  .dossier-back-to-canyon-btn {
+    grid-area: back;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    justify-self: start;
+    min-height: 36px;
+  }
+  .dossier-close-btn,
+  .dossier-farewell-trigger-btn {
+    grid-area: close;
+    justify-self: end;
+  }
+  .dossier-farewell-trigger-btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 11.5px;
+  }
+  .dossier-center-cluster {
+    grid-area: tabs;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .canyon-telemetry-badge {
+    display: none;
+  }
+  .dossier-nav-tabs {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 9999px;
+    max-width: 100%;
+  }
+  .dossier-nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .dossier-tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 11px;
+    gap: 4px;
+  }
   .dossier-layout-split {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
   .dossier-guide-station {
-    position: relative;
-    top: 0;
+    display: contents;
+  }
+  .dossier-guide-card {
+    order: 1;
+    padding: 10px 12px;
+    border-radius: 16px;
+    margin-bottom: 2px;
+  }
+  .guide-status-bar {
+    padding-bottom: 4px;
+    margin-bottom: 2px;
   }
   .guide-3d-viewport {
-    height: 220px;
+    height: 140px;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+  .astra-speech-bubble {
+    font-size: 10.5px;
+    padding: 3px 10px;
+    top: 4px;
+  }
+  .guide-identity-tag {
+    padding: 4px 6px;
+  }
+  .guide-tag-top strong {
+    font-size: 12px;
+  }
+  .guide-tag-badge {
+    font-size: 7.5px;
+    padding: 1px 5px;
+  }
+  .guide-tag-sub {
+    font-size: 9.5px;
+  }
+  .dossier-body {
+    order: 2;
+    padding: 16px 12px;
+    border-radius: 18px;
+  }
+  .dossier-header-block {
+    margin-bottom: 18px;
+  }
+  .dossier-title {
+    font-size: clamp(20px, 5.5vw, 26px);
+    line-height: 1.2;
+    margin: 0 0 8px;
+  }
+  .dossier-lead {
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .dossier-contact-card {
+    order: 3;
+    padding: 14px;
+    border-radius: 16px;
+    margin-top: 4px;
+  }
+  .contact-round-buttons-row {
+    gap: 12px;
+  }
+  .contact-round-btn {
+    width: 48px;
+    height: 48px;
+  }
+  /* Project Cards on Mobile */
+  .project-feature-card {
+    padding: 16px 12px;
+    border-radius: 16px;
+  }
+  .proj-title {
+    font-size: 16.5px;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .proj-desc {
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 0 0 12px;
+  }
+  .proj-badge {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .crown-flagship-badge {
+    font-size: 8px !important;
+    letter-spacing: 1px !important;
+  }
+  .proj-tech-stack {
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .proj-tech-stack span {
+    font-size: 9.5px;
+    padding: 2.5px 8px;
+  }
+  .proj-metrics-grid {
+    gap: 6px;
+    margin: 8px 0 12px;
+  }
+  .proj-metric-pill {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+  .proj-highlights-box {
+    padding: 12px 14px;
+    margin: 10px 0 14px;
+  }
+  .proj-highlights-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .proj-highlights-list li {
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .proj-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .proj-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 14px;
+    font-size: 11.5px;
+    min-height: 40px;
+  }
+  .proj-part-tabs {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  .proj-part-btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 10.5px;
+    text-align: center;
+    justify-content: center;
+  }
+  /* Skills & Education Cards on Mobile */
+  .education-degree-card,
+  .education-career-vector,
+  .education-coursework-card,
+  .skill-domain-card,
+  .skill-feature-card,
+  .achievement-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+  .skills-core-grid,
+  .skills-architecture-matrix,
+  .achievements-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 .dossier-back-to-canyon-btn {
@@ -5560,8 +5987,49 @@ em { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 }
 
 @media (max-width: 640px) {
+  .farewell-deck-container {
+    width: min(94vw, 480px);
+    padding: 16px 12px;
+    max-height: 94vh;
+  }
+  .farewell-heading {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
   .farewell-twins-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .farewell-bot-card {
+    padding: 10px 8px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+  .bot-card-topbar {
+    padding-bottom: 5px;
+  }
+  .bot-id strong {
+    font-size: 11px;
+  }
+  .bot-3d-frame {
+    height: 140px;
+    border-radius: 12px;
+  }
+  .bot-speech-bubble {
+    padding: 6px 8px;
+    border-radius: 10px;
+  }
+  .bubble-text-short {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .farewell-single-action-bar {
+    margin-top: 14px;
+  }
+  .farewell-btn-primary {
+    min-height: 44px;
+    padding: 0 20px;
+    font-size: 13px;
   }
 }
 
@@ -6311,6 +6779,81 @@ button, a {
   color: #38bdf8;
 }
 
+@media (max-width: 640px) {
+  .resumecv-inner {
+    width: min(96vw, 980px);
+    max-height: 94vh;
+    border-radius: 20px;
+  }
+  .resumecv-header {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .resumecv-top-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .resumecv-back-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+  .resumecv-tabs-pill {
+    width: 100%;
+    display: flex;
+  }
+  .resumecv-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 11.5px;
+    gap: 5px;
+  }
+  .resumecv-actions {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+  }
+  .glass-dl-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 11px;
+    gap: 5px;
+  }
+  .resumecv-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .resumecv-heading {
+    font-size: 16px;
+  }
+  .resumecv-body {
+    padding: 18px 12px;
+    max-height: calc(94vh - 160px);
+  }
+  .sheet-headline h1 {
+    font-size: 22px;
+  }
+  .sheet-subtitle {
+    font-size: 13.5px;
+  }
+  .sheet-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .project-entry {
+    padding: 12px 14px;
+  }
+  .entry-bullets {
+    padding-left: 14px;
+    font-size: 12.5px;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────
    CONTACT MODAL STYLES (GLASS DESIGN)
    ───────────────────────────────────────────────────────────── */
@@ -6568,5 +7111,77 @@ button, a {
   transform: translateX(3px);
 }
 
-
-
+@media (max-width: 600px) {
+  .contact-modal-inner {
+    width: min(94vw, 520px);
+    padding: 20px 16px;
+    border-radius: 20px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .contact-modal-header {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+  .contact-modal-heading {
+    font-size: 19px;
+  }
+  .contact-modal-subtitle {
+    font-size: 12.5px;
+  }
+  .contact-status-banner {
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+  .status-banner-text strong {
+    font-size: 12px;
+  }
+  .status-banner-text span {
+    font-size: 10.5px;
+  }
+  .contact-channels-grid {
+    gap: 12px;
+  }
+  .contact-channel-card {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    grid-template-areas:
+      "icon details"
+      "actions actions";
+    gap: 10px 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+  .channel-icon-wrap {
+    grid-area: icon;
+    width: 42px;
+    height: 42px;
+  }
+  .channel-details {
+    grid-area: details;
+    min-width: 0;
+  }
+  .channel-lbl {
+    font-size: 10.5px;
+  }
+  .channel-val {
+    font-size: 12.5px;
+    white-space: normal;
+    word-break: break-all;
+  }
+  .channel-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-top: 2px;
+  }
+  .channel-action-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 11.5px;
+    min-height: 38px;
+  }
+}

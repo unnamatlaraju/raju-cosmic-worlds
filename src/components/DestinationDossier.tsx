@@ -70,6 +70,11 @@ export function DestinationDossier({
       if (activeTab && activeTab.offsetWidth > 0) {
         movePillTo(activeTab, hasRenderedPillRef.current)
         hasRenderedPillRef.current = true
+        try {
+          activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+        } catch {
+          // ignore
+        }
       } else {
         requestAnimationFrame(measureAndMove)
       }
@@ -143,7 +148,8 @@ export function DestinationDossier({
         <div className="dossier-topbar">
           <button className="dossier-back-to-canyon-btn" onClick={onClose} aria-label="Return to Ember Canyon Outpost">
             <Icon name="back" />
-            <span>Return to Ember Canyon</span>
+            <span className="dossier-back-text-full">Return to Ember Canyon</span>
+            <span className="dossier-back-text-short">Outpost</span>
           </button>
 
           <div className="dossier-center-cluster">

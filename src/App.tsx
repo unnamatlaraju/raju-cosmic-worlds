@@ -598,7 +598,8 @@ export function App() {
             aria-label="Resume & CV"
           >
             <Icon name="file" />
-            <span>Resume & CV</span>
+            <span className="nav-btn-text-full">Resume & CV</span>
+            <span className="nav-btn-text-short">Resume</span>
           </button>
           <button
             className="glass-nav-btn contact-nav-btn"
@@ -859,7 +860,8 @@ export function App() {
             <div className="canyon-outpost-topbar">
               <button className="return-pad-btn" onClick={flyToPad} disabled={transitState !== 'idle'}>
                 <Icon name="back" />
-                <span>Return to Landing Pad 01</span>
+                <span className="return-pad-text-full">Return to Landing Pad 01</span>
+                <span className="return-pad-text-short">Landing Pad</span>
               </button>
               <div className="canyon-telemetry-badge">
                 <span className="radar-beacon active" />
